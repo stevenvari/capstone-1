@@ -81,7 +81,7 @@ public class App {
                 String vendor = tokens[3];
                 double price = Double.parseDouble(tokens[4]);
                 Transaction transaction = new Transaction(dateTime,description, vendor, price);
-                System.out.println(transaction);
+                System.out.println(transaction.display());
             }
             bufferedReader.close();
 

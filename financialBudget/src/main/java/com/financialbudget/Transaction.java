@@ -1,6 +1,7 @@
 package com.financialbudget;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Transaction {
     private LocalDateTime dateTime;
@@ -44,6 +45,17 @@ public class Transaction {
 
     public void setPrice(double price) {
         this.price = price;
+    }
+
+    public String display() {
+        DateTimeFormatter format = DateTimeFormatter.ofPattern("E, MMM dd, yyyy hh:mm a");
+        StringBuilder builder = new StringBuilder();
+        builder.append(dateTime.format(format)).append(" ").append("\n")
+                .append(description).append("\n")
+                .append(vendor).append("\n")
+                .append(price);
+        return builder.toString();
+
     }
 
     @Override
