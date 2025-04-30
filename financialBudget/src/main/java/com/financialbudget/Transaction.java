@@ -60,12 +60,9 @@ public class Transaction {
 
     @Override
     public String toString() {
-        return
-                "dateTime=" + dateTime +
-                ", description='" + description + '\'' +
-                ", vendor='" + vendor + '\'' +
-                ", price=" + price +
-                '}';
+        DateTimeFormatter dateFormatForFile = DateTimeFormatter.ofPattern("yyyy-MM-dd|HH:mm:ss");
+        String transaction = String.format("%s|%s|%s|%.2f", dateTime.format(dateFormatForFile), description,vendor,price);
+        return transaction;
     }
 }
 

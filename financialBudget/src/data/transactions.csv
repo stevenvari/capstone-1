@@ -48,3 +48,9 @@ data|time|description|vendor|amount
 2023-04-30|08:30:00|monthly subscription|Dropbox|-11.99
 2023-04-30|11:40:00|consulting fee|Consultant Z|-500.00
 2023-04-30|15:00:00|invoice 1009 paid|Client I|2650.00
+2025-04-29|20:53:44|Refund of CPU and GPU|NVIDIA|1800.00
+2025-04-29|20:58:52|Refund of CPU and GPU|NVIDIA|1800.00
+2025-04-29|20:59:54|Refund of CPU and GPU|NVIDIA|1800.00
+2025-04-29|21:18:38|Refund of CPU and GPU|NVIDIA|1800.00
+2025-04-29|21:39:49|My payment|my company|5000.00
+2025-04-29|21:44:45|Refund car|mustang|3000.00

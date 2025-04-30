@@ -18,7 +18,7 @@ public class App {
 
             switch (choice){
                 case "D":
-                   // addDeposit();
+                    addDeposit();
                     break;
                 case "A":
                     viewAllTransactions();
@@ -57,6 +57,38 @@ public class App {
         System.out.println("X- Exit");
         System.out.print("Please choose an option: ");
     }
+    public static void addDeposit(){
+         System.out.println("Add Deposit");
+         System.out.println("-------------");
+
+         System.out.println("Enter description ");
+         String description = scanner.nextLine();
+
+         System.out.println("Enter the vendor ");
+         String vendor = scanner.nextLine();
+
+         System.out.println("Enter the price ");
+         double price = scanner.nextDouble();
+
+         System.out.println("Press enter to save it");
+         scanner.nextLine();
+
+         Transaction transaction = new Transaction(LocalDateTime.now(),description,vendor,price);
+         saveDeposit(transaction);
+         backToMainMenu();
+    }
+    public static  void saveDeposit(Transaction transaction ){
+        try {
+            FileWriter fileWriter = new FileWriter("src/data/transactions.csv", true);
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+            bufferedWriter.write("\n");
+            bufferedWriter.write(transaction.toString());
+            bufferedWriter.close();
+        } catch (IOException e) {
+            System.out.println("An error occurred saving the deposit. Please try again.");
+            e.getStackTrace();
+        }
+    }
     public static void viewAllTransactions(){
          System.out.println("Wha would you like to do");
          System.out.println("----------------------");
@@ -82,6 +114,7 @@ public class App {
                 double price = Double.parseDouble(tokens[4]);
                 Transaction transaction = new Transaction(dateTime,description, vendor, price);
                 System.out.println(transaction.display());
+                //System.out.println(transaction);
             }
             bufferedReader.close();
 
