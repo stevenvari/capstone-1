@@ -50,9 +50,9 @@ public class Transaction {
     public String display() {
         DateTimeFormatter format = DateTimeFormatter.ofPattern("E, MMM dd, yyyy hh:mm a");
         StringBuilder builder = new StringBuilder();
-        builder.append(dateTime.format(format)).append(" ").append("\n")
-                .append(description).append("\n")
-                .append(vendor).append("\n")
+        builder.append(dateTime.format(format)).append(" ")
+                .append(description).append(" ")
+                .append(vendor).append(" ")
                 .append(price);
         return builder.toString();
 
