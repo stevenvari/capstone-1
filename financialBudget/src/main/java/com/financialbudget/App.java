@@ -1,34 +1,30 @@
 package com.financialbudget;
 
 import java.io.*;
-import java.time.DateTimeException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 
 public class App {
-     private static Scanner scanner = new Scanner(System.in);
+     private static Scanner keystrokes = new Scanner(System.in);
 
      public static void main(String[] args) {
 
         boolean running = true;
         while (running){
-            showMainMenu();
-            String choice = scanner.nextLine().trim().toUpperCase();
+            mainMenu();
+            String choice = keystrokes.nextLine().trim().toUpperCase();
 
             switch (choice){
                 case "D":
                     addDeposit();
                     break;
-                case "A":
-                    viewAllTransactions();
-                    break;
-
                 case "P":
                     makePayment();
                     break;
                 case "L":
-                    ledger();
+                    ledgerMenu();
                     break;
                 case "M":
                     backToMainMenu();
@@ -37,47 +33,46 @@ public class App {
                     System.out.println("Goodbye");
                     running =false;
                      break;
-
                 default:
                     System.out.println("Invalid menu option. Try again.");
             }
         }
-        scanner.close();
+        keystrokes.close();
 
     }
 
-    public static void showMainMenu(){
+    public static void mainMenu(){
         System.out.println("Welcome to the Financial Application");
         System.out.println("Home Screen:");
         System.out.println("D- Add Deposit");
         System.out.println("P- Make Payment (Debit)");
         System.out.println("L- Ledger");
-        System.out.println("A- All transactions");
         System.out.println("M- Go to main menu");
         System.out.println("X- Exit");
         System.out.print("Please choose an option: ");
+
     }
     public static void addDeposit(){
          System.out.println("Add Deposit");
          System.out.println("-------------");
 
          System.out.println("Enter description ");
-         String description = scanner.nextLine();
+         String description = keystrokes.nextLine();
 
          System.out.println("Enter the vendor ");
-         String vendor = scanner.nextLine();
+         String vendor = keystrokes.nextLine();
 
          System.out.println("Enter the price ");
-         double price = scanner.nextDouble();
+         double price = keystrokes.nextDouble();
 
          System.out.println("Press enter to save it");
-         scanner.nextLine();
+         keystrokes.nextLine();
 
          Transaction transaction = new Transaction(LocalDateTime.now(),description,vendor,price);
-         saveDeposit(transaction);
+         saveTransaction(transaction);
          backToMainMenu();
     }
-    public static  void saveDeposit(Transaction transaction ){
+    public static  void saveTransaction(Transaction transaction ){
         try {
             FileWriter fileWriter = new FileWriter("src/data/transactions.csv", true);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
@@ -89,13 +84,8 @@ public class App {
             e.getStackTrace();
         }
     }
-    public static void viewAllTransactions(){
-         System.out.println("Wha would you like to do");
-         System.out.println("----------------------");
-         System.out.println(" see your transactions?" );
-
-
-
+    private static ArrayList<Transaction> readTransaction() {
+        ArrayList<Transaction> transactions = new ArrayList<>();
 
         try {
 
@@ -113,8 +103,9 @@ public class App {
                 String vendor = tokens[3];
                 double price = Double.parseDouble(tokens[4]);
                 Transaction transaction = new Transaction(dateTime,description, vendor, price);
+                transactions.add(transaction);
                 System.out.println(transaction.display());
-                //System.out.println(transaction);
+
             }
             bufferedReader.close();
 
@@ -125,26 +116,185 @@ public class App {
                 NumberFormatException e) {
             System.out.println("Invalid number format in file.");
         }
+        return transactions;
+    }
+    public static void makePayment(){
+        System.out.println("Add Payment");
+        System.out.println("-------------");
+
+        System.out.println("Enter description ");
+        String description = keystrokes.nextLine();
+
+        System.out.println("Enter the vendor ");
+        String vendor = keystrokes.nextLine();
+
+        System.out.println("Enter the price ");
+        double price = keystrokes.nextDouble();
+
+        System.out.println("Press enter to save it");
+        keystrokes.nextLine();
+
+        Transaction transaction = new Transaction(LocalDateTime.now(),description,vendor,price);
+        saveTransaction(transaction);
+
+        backToMainMenu();
+
+
+    }
+    public static void ledgerMenu(){
+
+        System.out.println("Ledger screen");
+        System.out.println("----------------");
+        System.out.println("A - All transactions");
+        System.out.println("D - View Deposits Only");
+        System.out.println("P - View Payments Only");
+        System.out.println("R - View Reports");
+        System.out.println("M - main menu");
+        System.out.println("Please choose an option: ");
+
+        backToMainMenu();
+
+        boolean running = true;
+
+        while (running){
+            String selectOption = keystrokes.nextLine();
+            viewReports();
+            switch (selectOption){
+                case "A":
+                    viewAllTransactions();
+                    break;
+                case "D":
+                    viewOnlyDeposits();
+                    break;
+                case "P":
+                    viewOnlyPayments();
+                    break;
+                case "R":
+                    viewReports();
+                    break;
+                case "X":
+                    System.out.println("Goodbye");
+                    running =false;
+                    break;
+                default:
+                    System.out.println("Invalid menu option. Try again.");
+            }
+        }
+
+
+
+    }
+    public static void viewAllTransactions(){
+        System.out.println("Transactions ");
+        System.out.println("----------------------");
+        System.out.println("This are all" );
+        keystrokes.nextLine();
+
+        ArrayList<Transaction> transactions =readTransaction();
+        displayTransaction(transactions);
+
+
         backToMainMenu();
 
 
 
     }
-    public static void makePayment(){
-         System.out.println("What would you like to do? ");
-         System.out.println("------------------------");
-         System.out.println("Do a payment ");
-         scanner.nextInt();
-         backToMainMenu();
-         scanner.nextLine();
+    private static void displayTransaction(ArrayList<Transaction> transactions) {
+        for (Transaction transaction: transactions){
+            System.out.println(transaction.display());
+        }
     }
-    public static void ledger(){
+    public static void viewOnlyDeposits(){
 
     }
+    public static void viewOnlyPayments(){
 
-    public static void backToMainMenu() {
+    }
+    public static void viewReports(){
+        System.out.println("Run reports ");
+        System.out.println("--------------");
+        System.out.println("What report do you want to run");
+
+        System.out.println(" 1- Month to date ");
+        System.out.println(" 2- Previous Month ");
+        System.out.println(" 3- Year to date ");
+        System.out.println(" 4- Previous year ");
+        System.out.println(" 5- Search by vendor ");
+        System.out.println(" 0 Exit");
+        System.out.println("choose an option");
+
+
+        boolean running = true;
+        while (running) {
+
+            int selectedMenuOption = keystrokes.nextInt();
+
+            switch (selectedMenuOption) {
+                case 1:
+                    MonthToDate();
+                    break;
+                case 2:
+                    previousToMonth();
+                    break;
+                case 3:
+                    yearToDate();
+                    break;
+                case 4:
+                    previousToYear();
+                    break;
+                case 5:
+                    searchTransactionByVendor();
+                    break;
+                case 6:
+                    running = false;
+                    break;
+                default:
+                    System.out.println("Invalid report menu option. Try again.");
+            }
+        }
+
+
+
+
+    }
+    public static void MonthToDate(){
+          System.out.println("Transactions over the last month date ");
+          System.out.println("...............................");
+
+          LocalDateTime firstOfTheMonth = LocalDateTime.now().withDayOfMonth(1);
+          LocalDateTime currentDate = LocalDateTime.now();
+
+
+        ArrayList<Transaction>transactions =readTransaction();
+
+        ArrayList<Transaction> overTheLastMonthDate = new ArrayList<>();
+        for (Transaction transaction:transactions){
+            /*if(){
+
+            }*/
+            overTheLastMonthDate.add(transaction);
+
+        }
+
+        displayTransaction(overTheLastMonthDate);
+
+        backToMainMenu();
+    }
+    public static void previousToMonth(){
+
+    }
+    public static void yearToDate(){
+
+    }
+    public static void previousToYear(){
+
+    }
+    public static void searchTransactionByVendor(){
+
+    }
+    private static void backToMainMenu() {
        System.out.println("press M to return to the main menu...");
-       scanner.nextLine();
+       keystrokes.nextLine();
     }
 
 }
