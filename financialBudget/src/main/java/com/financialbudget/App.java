@@ -1,19 +1,23 @@
 package com.financialbudget;
 
 import java.io.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoField;
-import java.time.temporal.ChronoUnit;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-
 public class App {
     private static Scanner keystrokes = new Scanner(System.in);
-    private static  ArrayList<Transaction> transactions = new ArrayList<>();
+    public static ArrayList<Transaction> transactions = new ArrayList<>();
+    private static final String DATA_FILE = "src/data/transactions.csv";
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
+    private static final DateTimeFormatter DATE_TIME_FORMATTER_FOR_READING = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+
     public static void main(String[] args) {
+        loadTransactions(); // Load transactions at the start
 
         boolean running = true;
         while (running) {
@@ -38,131 +42,117 @@ public class App {
                     System.out.println("Invalid menu option. Try again.");
             }
         }
-        //keystrokes.close();
-
+        keystrokes.close(); // Close the scanner when the application exits
     }
 
     public static void mainMenu() {
-        System.out.println("Welcome to the Financial Application");
+        System.out.println("\nWelcome to the Financial Application");
         System.out.println("Home Screen:");
         System.out.println("D- Add Deposit");
         System.out.println("P- Make Payment (Debit)");
         System.out.println("L- Ledger");
-        System.out.println("M- Go to main menu");
         System.out.println("X- Exit");
         System.out.print("Please choose an option: ");
-
     }
 
     public static void addDeposit() {
-        System.out.println("Add Deposit");
+        System.out.println("\nAdd Deposit");
         System.out.println("-------------");
 
-        System.out.println("Enter description ");
+        System.out.print("Enter description: ");
         String description = keystrokes.nextLine();
 
-        System.out.println("Enter the vendor ");
+        System.out.print("Enter the vendor: ");
         String vendor = keystrokes.nextLine();
 
-        System.out.println("Enter the price ");
+        System.out.print("Enter the amount: ");
         double price = keystrokes.nextDouble();
-        keystrokes.nextLine();
-
-        System.out.println("Press enter to save it");
-        keystrokes.nextLine();
+        keystrokes.nextLine(); // Consume newline
 
         Transaction transaction = new Transaction(LocalDateTime.now(), description, vendor, price);
         saveTransaction(transaction);
+        System.out.println("Deposit saved.");
     }
 
     public static void saveTransaction(Transaction transaction) {
-        try {
-            FileWriter fileWriter = new FileWriter("src/data/transactions.csv", true);
-            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-            bufferedWriter.write("\n");
-            bufferedWriter.write(transaction.toString());
-            bufferedWriter.close();
+        try (FileWriter fileWriter = new FileWriter(DATA_FILE, true);
+             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)) {
+            String dateString = transaction.getDateTime().toLocalDate().format(DATE_FORMATTER);
+            String timeString = transaction.getDateTime().toLocalTime().format(TIME_FORMATTER);
+
+            bufferedWriter.write(String.join("|",
+                    dateString,
+                    timeString,
+                    transaction.getDescription(),
+                    transaction.getVendor(),
+                    String.valueOf(transaction.getPrice())));
+            bufferedWriter.newLine(); // Use newLine() for proper line breaks
         } catch (IOException e) {
-            System.out.println("An error occurred saving the deposit. Please try again.");
-            e.getStackTrace();
+            System.out.println("An error occurred saving the transaction: " + e.getMessage());
         }
     }
 
-    private static ArrayList<Transaction> readTransaction() {
-        ArrayList<Transaction> transactions = new ArrayList<>();
-
-        try {
-
-            FileReader fileReader = new FileReader("src/data/transactions.csv");
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-
-            bufferedReader.readLine();
+    private static void loadTransactions() {
+        transactions.clear(); // Clear existing transactions before loading
+        try (FileReader fileReader = new FileReader(DATA_FILE);
+             BufferedReader bufferedReader = new BufferedReader(fileReader)) {
 
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 String[] tokens = line.split("\\|");
+                if (tokens.length == 5) {
+                    try {
+                        LocalDateTime dateTime = LocalDateTime.parse(tokens[0] + "T" + tokens[1], DATE_TIME_FORMATTER_FOR_READING);
+                        String description = tokens[2];
+                        String vendor = tokens[3];
+                        double price = Double.parseDouble(tokens[4]);
 
-                LocalDateTime dateTime = LocalDateTime.parse(tokens[0] + "T" + tokens[1]);
-                String description = tokens[2];
-                String vendor = tokens[3];
-                double price = Double.parseDouble(tokens[4]);
-
-                Transaction transaction = new Transaction(dateTime, description, vendor, price);
-                transactions.add(transaction);
-                System.out.println(transaction.display());
-
+                        Transaction transaction = new Transaction(dateTime, description, vendor, price);
+                        transactions.add(transaction);
+                    } catch (DateTimeParseException e) {
+                        System.out.println("Error parsing date/time in line: " + line + " - Expected format: yyyy-MM-dd|HH:mm:ss - " + e.getMessage());
+                    }
+                } else if (!line.trim().isEmpty()) {
+                    System.out.println("Skipping invalid line: " + line + " - Expected 5 tokens, but found " + tokens.length);
+                }
             }
-            bufferedReader.close();
-
         } catch (IOException e) {
-            System.out.println("Error reading file: " + e.getMessage());
-            //e.printStackTrace();
-        } catch (
-                NumberFormatException e) {
-            System.out.println("Invalid number format in file.");
+            System.out.println("Error loading transactions: " + e.getMessage());
         }
-        return transactions;
     }
 
     public static void makePayment() {
-        System.out.println("Add Payment");
-        System.out.println("-------------");
+        System.out.println("\nMake Payment (Debit)");
+        System.out.println("==================");
 
-        System.out.println("Enter description ");
+        System.out.print("Enter description: ");
         String description = keystrokes.nextLine();
 
-        System.out.println("Enter the vendor ");
+        System.out.print("Enter the vendor: ");
         String vendor = keystrokes.nextLine();
 
-        System.out.println("Enter the price ");
+        System.out.print("Enter the amount: ");
         double price = keystrokes.nextDouble();
         keystrokes.nextLine();
 
-        System.out.println("Press enter to save it");
-        keystrokes.nextLine();
-
-
-        Transaction transaction = new Transaction(LocalDateTime.now(), description, vendor, price);
+        Transaction transaction = new Transaction(LocalDateTime.now(), description, vendor, -price); // Debit is negative
         saveTransaction(transaction);
-
+        System.out.println("Payment saved.");
     }
 
     public static void ledgerMenu() {
-
-
         boolean running = true;
-
         while (running) {
-            System.out.println("Ledger screen");
+            System.out.println("\nLedger Screen");
             System.out.println("----------------");
             System.out.println("A - All transactions");
             System.out.println("D - View Deposits Only");
             System.out.println("P - View Payments Only");
             System.out.println("R - View Reports");
-            System.out.println("M - main menu");
-            System.out.println("Please choose an option: ");
+            System.out.println("M - Main Menu");
+            System.out.print("Please choose an option: ");
 
-            String selectOption = keystrokes.nextLine();
+            String selectOption = keystrokes.nextLine().trim().toUpperCase();
 
             switch (selectOption) {
                 case "A":
@@ -177,10 +167,6 @@ public class App {
                 case "R":
                     viewReports();
                     break;
-                case "X":
-                    System.out.println("Goodbye");
-                    running = false;
-                    break;
                 case "M":
                     running = false;
                     break;
@@ -188,77 +174,78 @@ public class App {
                     System.out.println("Invalid menu option. Try again.");
             }
         }
-
-
     }
 
     public static void viewAllTransactions() {
-        System.out.println("Transactions ");
-        System.out.println("----------------------");
-        System.out.println("This are all");
-
-
-        ArrayList<Transaction> transactions = readTransaction();
-        displayTransaction(transactions);
-
-        System.out.println("Press enter to continue");
+        System.out.println("\n--- All Transactions ---");
+        if (transactions.isEmpty()) {
+            System.out.println("No transactions recorded yet.");
+        } else {
+            displayTransactions(transactions);
+        }
+        System.out.print("Press enter to continue...");
         keystrokes.nextLine();
     }
 
-    private static void displayTransaction(ArrayList<Transaction> transactions) {
-        for (Transaction transaction : transactions) {
-            System.out.println(transaction.display());
+    private static void displayTransactions(List<Transaction> transactionList) {
+        DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        for (Transaction transaction : transactionList) {
+            System.out.println("Date/Time: " + transaction.getDateTime().format(displayFormatter));
+            System.out.println("Description: " + transaction.getDescription());
+            System.out.println("Vendor: " + transaction.getVendor());
+            System.out.println("Price: $" + String.format("%.2f", transaction.getPrice()));
+            System.out.println("----------------------");
         }
     }
 
-    public static void viewOnlyDeposits () {
-           System.out.println("Deposits ");
-           System.out.println("..........");
-
-        boolean foundDeposits = false;
-
-           for (Transaction transaction : transactions) {
-            if (transaction.getPrice() > 0){
-                System.out.println(transaction.display());
-                foundDeposits = true;
+    public static void viewOnlyDeposits() {
+        System.out.println("\n--- Deposits Only ---");
+        List<Transaction> deposits = new ArrayList<>();
+        for (Transaction transaction : transactions) {
+            if (transaction.getPrice() > 0) {
+                deposits.add(transaction);
             }
         }
-
-       if(!foundDeposits){
-           System.out.println("no deposits found.");
-       }
-
-        System.out.println("press enter to continue..");
+        if (deposits.isEmpty()) {
+            System.out.println("No deposits recorded.");
+        } else {
+            displayTransactions(deposits);
+        }
+        System.out.print("Press enter to continue...");
         keystrokes.nextLine();
-
-
     }
 
     public static void viewOnlyPayments() {
-        System.out.println("view only payments ");
-        System.out.println("=================");
-
-
+        System.out.println("\n--- Payments Only ---");
+        List<Transaction> payments = new ArrayList<>();
+        for (Transaction transaction : transactions) {
+            if (transaction.getPrice() < 0) {
+                payments.add(transaction);
+            }
+        }
+        if (payments.isEmpty()) {
+            System.out.println("No payments recorded.");
+        } else {
+            displayTransactions(payments);
+        }
+        System.out.print("Press enter to continue...");
+        keystrokes.nextLine();
     }
 
     public static void viewReports() {
-        System.out.println("Run reports ");
-        System.out.println("--------------");
-        System.out.println("What report do you want to run");
-
-        System.out.println(" 1- Month to date ");
-        System.out.println(" 2- Previous Month ");
-        System.out.println(" 3- Year to date ");
-        System.out.println(" 4- Previous year ");
-        System.out.println(" 5- Search by vendor ");
-        System.out.println(" 0 Exit");
-        System.out.println("choose an option");
-
-
         boolean running = true;
         while (running) {
+            System.out.println("\n--- Run Reports ---");
+            System.out.println("1 - Month to date");
+            System.out.println("2 - Previous Month");
+            System.out.println("3 - Year to date");
+            System.out.println("4 - Previous year");
+            System.out.println("5 - Search by vendor");
+            System.out.println("0 - Back to Ledger Menu");
+            System.out.print("Choose an option: ");
 
             int selectedMenuOption = keystrokes.nextInt();
+            keystrokes.nextLine(); // Consume newline
 
             switch (selectedMenuOption) {
                 case 1:
@@ -283,83 +270,132 @@ public class App {
                     System.out.println("Invalid report menu option. Try again.");
             }
         }
-
-
     }
 
     public static void MonthToDate() {
-        System.out.println("Transactions over the last month date ");
-        System.out.println("...............................");
-
-        //LocalDateTime firstOfTheMonth = LocalDateTime.now().withDayOfMonth(1);
-        LocalDateTime currentDate = LocalDateTime.now();
-
-
-        ArrayList<Transaction> transactions = readTransaction();
-
-        ArrayList<Transaction> overTheLastMonthDate = new ArrayList<>();
+        System.out.println("\n--- Transactions This Month ---");
+        LocalDateTime now = LocalDateTime.now();
+        List<Transaction> currentMonthTransactions = new ArrayList<>();
         for (Transaction transaction : transactions) {
-
-            if (transaction.getDateTime().getMonth() == currentDate.getMonth() && transaction.getDateTime().getYear() == currentDate.getYear()) {
-                overTheLastMonthDate.add(transaction);
+            if (transaction.getDateTime().getMonth() == now.getMonth() && transaction.getDateTime().getYear() == now.getYear()) {
+                currentMonthTransactions.add(transaction);
             }
-
-
         }
-
-        displayTransaction(overTheLastMonthDate);
-
+        displayTransactions(currentMonthTransactions);
+        System.out.print("Press enter to continue...");
+        keystrokes.nextLine();
     }
 
     public static void previousToMonth() {
-        LocalDateTime currentDateTime = LocalDateTime.now();
-
-        ArrayList<Transaction>transactions = readTransaction();
-
-        ArrayList<Transaction> previousMonth = new ArrayList<>();
-        for (Transaction transaction : transactions){
-
-            if (transaction.getDateTime().getMonth() == currentDateTime.getMonth() && transaction.getDateTime().getYear() == currentDateTime.getYear()){
-                previousMonth.add(transaction);
+        System.out.println("\n--- Transactions Last Month ---");
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime previousMonth = now.minusMonths(1);
+        List<Transaction> lastMonthTransactions = new ArrayList<>();
+        for (Transaction transaction : transactions) {
+            if (transaction.getDateTime().getMonth() == previousMonth.getMonth() && transaction.getDateTime().getYear() == previousMonth.getYear()) {
+                lastMonthTransactions.add(transaction);
             }
         }
-        displayTransaction(previousMonth);
+        displayTransactions(lastMonthTransactions);
+        System.out.print("Press enter to continue...");
+        keystrokes.nextLine();
     }
 
     public static void yearToDate() {
-
-        LocalDateTime today = LocalDateTime.now();
-        ArrayList<Transaction>transactions = readTransaction();
-
-        ArrayList<Transaction> yearToDate = new ArrayList<>();
-
-        LocalDateTime startOfYear = today
-                .with(ChronoField.DAY_OF_YEAR, 1)        // jump to Jan 1 of this year, same time of day
-                .truncatedTo(ChronoUnit.DAYS);           // zero‐out the time component
-
-        List<Transaction> filtered = new ArrayList<>();
-
-        for (Transaction t : transactions) {
-            LocalDateTime dateTime = t.getDateTime();   // now a LocalDateTime
-            if (!dateTime.isBefore(startOfYear) && !dateTime.isAfter(today)) {
-                filtered.add(t);
+        System.out.println("\n--- Transactions This Year ---");
+        LocalDateTime now = LocalDateTime.now();
+        List<Transaction> currentYearTransactions = new ArrayList<>();
+        for (Transaction transaction : transactions) {
+            if (transaction.getDateTime().getYear() == now.getYear()) {
+                currentYearTransactions.add(transaction);
             }
         }
-
-        displayTransaction(yearToDate);
-
-
-
+        displayTransactions(currentYearTransactions);
+        System.out.print("Press enter to continue...");
+        keystrokes.nextLine();
     }
 
     public static void previousToYear() {
-
+        System.out.println("\n--- Transactions Last Year ---");
+        LocalDateTime now = LocalDateTime.now();
+        List<Transaction> lastYearTransactions = new ArrayList<>();
+        for (Transaction transaction : transactions) {
+            if (transaction.getDateTime().getYear() == now.minusYears(1).getYear()) {
+                lastYearTransactions.add(transaction);
+            }
+        }
+        displayTransactions(lastYearTransactions);
+        System.out.print("Press enter to continue...");
+        keystrokes.nextLine();
     }
 
     public static void searchTransactionByVendor() {
+        System.out.println("\n--- Search Transactions by Vendor ---");
+        System.out.print("Enter the vendor to search for: ");
+        String vendorToSearch = keystrokes.nextLine().trim();
+        List<Transaction> matchingTransactions = new ArrayList<>();
+        for (Transaction transaction : transactions) {
+            if (transaction.getVendor().equalsIgnoreCase(vendorToSearch)) {
+                matchingTransactions.add(transaction);
+            }
+        }
+        if (matchingTransactions.isEmpty()) {
+            System.out.println("No transactions found for vendor: " + vendorToSearch);
+        } else {
+            displayTransactions(matchingTransactions);
+        }
+        System.out.print("Press enter to continue...");
+        keystrokes.nextLine();
+    }
 
+    // Assuming you have a Transaction class with these methods
+    public static class Transaction {
+        private LocalDateTime dateTime;
+        private String description;
+        private String vendor;
+        private double price;
 
+        public Transaction(LocalDateTime dateTime, String description, String vendor, double price) {
+            this.dateTime = dateTime;
+            this.description = description;
+            this.vendor = vendor;
+            this.price = price;
+        }
 
+        public LocalDateTime getDateTime() {
+            return dateTime;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public String getVendor() {
+            return vendor;
+        }
+
+        public double getPrice() {
+            return price;
+        }
+
+        public String display() {
+            DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            return "Date/Time: " + dateTime.format(displayFormatter) +
+                    "\nDescription: " + description +
+                    "\nVendor: " + vendor +
+                    "\nPrice: $" + String.format("%.2f", price);
+        }
+
+        @Override
+        public String toString() {
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+            return String.join("|",
+                    dateTime.toLocalDate().format(dateFormatter),
+                    dateTime.toLocalTime().format(timeFormatter),
+                    description,
+                    vendor,
+                    String.valueOf(price));
+        }
     }
 }
-
