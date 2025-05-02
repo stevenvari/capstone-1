@@ -1,5 +1,5 @@
 package com.financialbudget;
-import java.time.LocalDate;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -8,6 +8,7 @@ public class Transaction {
     private String description;
     private String vendor;
     private double price;
+
     public Transaction(LocalDateTime dateTime, String description, String vendor, double price) {
         this.dateTime = dateTime;
         this.description = description;
@@ -19,50 +20,35 @@ public class Transaction {
         return dateTime;
     }
 
-    public void setDateTime(LocalDateTime dateTime) {
-        this.dateTime = dateTime;
-    }
-
     public String getDescription() {
         return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public String getVendor() {
         return vendor;
     }
 
-    public void setVendor(String vendor) {
-        this.vendor = vendor;
-    }
-
     public double getPrice() {
         return price;
     }
 
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
     public String display() {
-        DateTimeFormatter format = DateTimeFormatter.ofPattern("E, MMM dd, yyyy hh:mm a");
-        StringBuilder builder = new StringBuilder();
-        builder.append(dateTime.format(format)).append(" ")
-                .append(description).append(" ")
-                .append(vendor).append(" ")
-                .append(price);
-        return builder.toString();
-
+        DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return "Date/Time: " + dateTime.format(displayFormatter) +
+                "\nDescription: " + description +
+                "\nVendor: " + vendor +
+                "\nPrice: $" + String.format("%.2f", price);
     }
 
     @Override
     public String toString() {
-        DateTimeFormatter dateFormatForFile = DateTimeFormatter.ofPattern("yyyy-MM-dd|HH:mm:ss");
-        String transaction = String.format("%s|%s|%s|%.2f", dateTime.format(dateFormatForFile), description,vendor,price);
-        return transaction;
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        return String.join("|",
+                dateTime.toLocalDate().format(dateFormatter),
+                dateTime.toLocalTime().format(timeFormatter),
+                description,
+                vendor,
+                String.valueOf(price));
     }
 }
-

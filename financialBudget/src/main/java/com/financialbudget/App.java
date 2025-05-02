@@ -97,6 +97,11 @@ public class App {
         try (FileReader fileReader = new FileReader(DATA_FILE);
              BufferedReader bufferedReader = new BufferedReader(fileReader)) {
 
+            String headerLine = bufferedReader.readLine(); // Read and discard the header line
+            if (headerLine != null && headerLine.contains("data|time")) {
+                System.out.println("Skipping header row: " + headerLine);
+            }
+
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 String[] tokens = line.split("\\|");
@@ -110,9 +115,11 @@ public class App {
                         Transaction transaction = new Transaction(dateTime, description, vendor, price);
                         transactions.add(transaction);
                     } catch (DateTimeParseException e) {
-                        System.out.println("Error parsing date/time in line: " + line + " - Expected format: yyyy-MM-dd|HH:mm:ss - " + e.getMessage());
+                        System.out.println("Error parsing date/time in line: " + line + " - Expected format:yyyy-MM-dd|HH:mm:ss - " + e.getMessage());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Error parsing price in line: " + line + " - Expected a number - " + e.getMessage());
                     }
-                } else if (!line.trim().isEmpty()) {
+                } else if (!line.trim().isEmpty()) { // Ignore empty lines
                     System.out.println("Skipping invalid line: " + line + " - Expected 5 tokens, but found " + tokens.length);
                 }
             }
@@ -120,6 +127,7 @@ public class App {
             System.out.println("Error loading transactions: " + e.getMessage());
         }
     }
+
 
     public static void makePayment() {
         System.out.println("\nMake Payment (Debit)");
@@ -133,7 +141,7 @@ public class App {
 
         System.out.print("Enter the amount: ");
         double price = keystrokes.nextDouble();
-        keystrokes.nextLine();
+        keystrokes.nextLine(); // Consume newline
 
         Transaction transaction = new Transaction(LocalDateTime.now(), description, vendor, -price); // Debit is negative
         saveTransaction(transaction);
@@ -346,56 +354,5 @@ public class App {
         }
         System.out.print("Press enter to continue...");
         keystrokes.nextLine();
-    }
-
-    // Assuming you have a Transaction class with these methods
-    public static class Transaction {
-        private LocalDateTime dateTime;
-        private String description;
-        private String vendor;
-        private double price;
-
-        public Transaction(LocalDateTime dateTime, String description, String vendor, double price) {
-            this.dateTime = dateTime;
-            this.description = description;
-            this.vendor = vendor;
-            this.price = price;
-        }
-
-        public LocalDateTime getDateTime() {
-            return dateTime;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public String getVendor() {
-            return vendor;
-        }
-
-        public double getPrice() {
-            return price;
-        }
-
-        public String display() {
-            DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            return "Date/Time: " + dateTime.format(displayFormatter) +
-                    "\nDescription: " + description +
-                    "\nVendor: " + vendor +
-                    "\nPrice: $" + String.format("%.2f", price);
-        }
-
-        @Override
-        public String toString() {
-            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-            return String.join("|",
-                    dateTime.toLocalDate().format(dateFormatter),
-                    dateTime.toLocalTime().format(timeFormatter),
-                    description,
-                    vendor,
-                    String.valueOf(price));
-        }
     }
 }
