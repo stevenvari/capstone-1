@@ -38,7 +38,7 @@ public class App {
                     System.out.println("Invalid menu option. Try again.");
             }
         }
-        keystrokes.close();
+        //keystrokes.close();
 
     }
 
@@ -66,6 +66,7 @@ public class App {
 
         System.out.println("Enter the price ");
         double price = keystrokes.nextDouble();
+        keystrokes.nextLine();
 
         System.out.println("Press enter to save it");
         keystrokes.nextLine();
@@ -88,7 +89,7 @@ public class App {
     }
 
     private static ArrayList<Transaction> readTransaction() {
-        //ArrayList<Transaction> transactions = new ArrayList<>();
+        ArrayList<Transaction> transactions = new ArrayList<>();
 
         try {
 
@@ -105,6 +106,7 @@ public class App {
                 String description = tokens[2];
                 String vendor = tokens[3];
                 double price = Double.parseDouble(tokens[4]);
+
                 Transaction transaction = new Transaction(dateTime, description, vendor, price);
                 transactions.add(transaction);
                 System.out.println(transaction.display());
@@ -139,6 +141,7 @@ public class App {
         System.out.println("Press enter to save it");
         keystrokes.nextLine();
 
+
         Transaction transaction = new Transaction(LocalDateTime.now(), description, vendor, price);
         saveTransaction(transaction);
 
@@ -158,7 +161,9 @@ public class App {
             System.out.println("R - View Reports");
             System.out.println("M - main menu");
             System.out.println("Please choose an option: ");
+
             String selectOption = keystrokes.nextLine();
+
             switch (selectOption) {
                 case "A":
                     viewAllTransactions();
@@ -195,6 +200,7 @@ public class App {
 
         ArrayList<Transaction> transactions = readTransaction();
         displayTransaction(transactions);
+
         System.out.println("Press enter to continue");
         keystrokes.nextLine();
     }
@@ -209,19 +215,29 @@ public class App {
            System.out.println("Deposits ");
            System.out.println("..........");
 
-           List<Transaction> payments = new ArrayList<>();
+        boolean foundDeposits = false;
 
-           for (Transaction transaction:transactions){
-               if (transaction.getPrice()>0){
-                   payments.add(transaction);
-               }
-               displayTransaction(transactions);
-           }
+           for (Transaction transaction : transactions) {
+            if (transaction.getPrice() > 0){
+                System.out.println(transaction.display());
+                foundDeposits = true;
+            }
+        }
+
+       if(!foundDeposits){
+           System.out.println("no deposits found.");
+       }
+
+        System.out.println("press enter to continue..");
+        keystrokes.nextLine();
 
 
     }
 
     public static void viewOnlyPayments() {
+        System.out.println("view only payments ");
+        System.out.println("=================");
+
 
     }
 
@@ -342,7 +358,8 @@ public class App {
 
     public static void searchTransactionByVendor() {
 
-    }
 
+
+    }
 }
 
