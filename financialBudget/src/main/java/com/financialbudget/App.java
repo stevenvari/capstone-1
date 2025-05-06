@@ -86,7 +86,8 @@ public class App {
                     transaction.getDescription(),
                     transaction.getVendor(),
                     String.valueOf(transaction.getPrice())));
-            bufferedWriter.newLine(); // Use newLine() for proper line breaks
+            bufferedWriter.newLine();// Use newLine() for proper line breaks
+            transactions.add(transaction);
         } catch (IOException e) {
             System.out.println("An error occurred saving the transaction: " + e.getMessage());
         }
